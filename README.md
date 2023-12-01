@@ -15,7 +15,7 @@ To run the tests run (from `build`):
 
     ctest
 
-To run, add the resource files to `res/` and then run (from `build`)
+To run, add the resource files to `res/` and then run
 
     ./aoc2023
 

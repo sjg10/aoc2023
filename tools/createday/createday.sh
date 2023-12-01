@@ -17,6 +17,6 @@ sed -i "s/EXAMPLEDAY/${targetday}/" ${rootdir}/days/day${targetday}/include/Day$
 
 sed -i "/^    # Further days go here/i\ \ \ \ day${targetday}" ${rootdir}/CMakeLists.txt
 
-sed -i "/^    \/\/Further days go here/i\ \ \ \ {\"Day${targetday}\", std::make_shared<Day${targetday}>(\"..\/res\/day${targetday}.txt\")}," ${rootdir}/aoc2023.cpp
+sed -i "/^    \/\/Further days go here/i\ \ \ \ {\"Day${targetday}\", std::make_shared<Day${targetday}>(\"res\/day${targetday}.txt\")}," ${rootdir}/aoc2023.cpp
 sed -i "/^\/\/Further day includes go here/i #include \"Day${targetday}.h\"" ${rootdir}/aoc2023.cpp
 
