@@ -24,5 +24,6 @@ add_executable(aoc2023
 target_link_libraries(
     aoc2023
     day01
+    day02
     # Further days go here
 )
