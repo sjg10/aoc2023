@@ -8,7 +8,6 @@ public:
     Scratchcards(std::istream &input);
     std::pair<unsigned int,unsigned int> getTotalScores();
 private:
-    unsigned int getScore(unsigned int i);
-    std::vector<std::pair<std::set<unsigned int>, std::set<unsigned int>>> m_scratchcards;
-    std::vector<unsigned int> m_copies;
+    /** Number of winning numbers per scratchcard*/
+    std::vector<unsigned int> m_scratchcards;
 };
