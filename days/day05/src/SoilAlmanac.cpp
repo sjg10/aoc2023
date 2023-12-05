@@ -45,27 +45,59 @@ SoilAlmanac::SoilAlmanac(std::istream &input) {
     }
 }
 
-ulong MapSet::map(ulong val) const{
-    for (auto const &itr : m_set) {
-        if (val < itr.m_in_start) {
-            break; // because ordered, will not be in a range
+std::vector<std::pair<ulong, ulong>> MapSet::map(std::vector<std::pair<ulong, ulong>> input_ranges) const {
+    std::vector<std::pair<ulong, ulong>> out;
+    std::vector<std::pair<ulong, ulong>> further_input_ranges;
+    do {
+        further_input_ranges = std::vector<std::pair<ulong, ulong>>();
+        for (auto const &range: input_ranges) {
+            ulong start_val = range.first;
+            ulong start_val_mapped = 0;
+            bool mapped = false;
+            ulong count = std::numeric_limits<ulong>::max();
+            std::set<MapRange>::iterator itr;
+            for (itr = m_set.begin(); itr != m_set.end(); ++itr) {
+                if (start_val < itr->m_in_start) {// because ordered, we know this wont end up mapped!
+                    start_val_mapped = start_val;
+                    mapped = true;
+                    count = itr->m_in_start - start_val;
+                }
+                else if (start_val <= itr->m_in_start + (itr->m_length - 1)) {
+                    start_val_mapped = itr->m_out_start + (start_val - itr->m_in_start);
+                    count = itr->m_length - (start_val - itr->m_in_start);
+                    mapped = true;
+                }
+                if(mapped) { break; }
+            }
+            if (!mapped) {
+                start_val_mapped = start_val;
+                count = std::numeric_limits<ulong>::max();
+            }
+            if (count >= range.second) { // mapped everything!
+                out.push_back({start_val_mapped, range.second});
+            }
+            else { //mapped_partial
+                out.push_back({start_val_mapped, count});
+                further_input_ranges.push_back({start_val + count, range.second - count});
+            }
         }
-        else if (val <= itr.m_in_start + (itr.m_length - 1)) {
-            return itr.m_out_start + (val - itr.m_in_start);
-        }
-    }
-    return val;
+        input_ranges = further_input_ranges;
+    } while (!further_input_ranges.empty());
+    return out;
 }
+
 
 
 ulong SoilAlmanac::getLowestSeedLocation() {
     ulong min = std::numeric_limits<ulong>::max();
     for (auto const &seed: m_seeds) {
-        auto val = seed;
+        std::vector<std::pair<ulong, ulong>> val_ranges = {{seed, 1}};
         for (auto const &map: m_maps) {
-            val = map.map(val);
+            val_ranges = map.map(val_ranges);
         }
-        if (val < min) {min = val;}
+        for (auto const &r: val_ranges) {
+            if (r.first < min) {min = r.first;}
+        }
     }
     return min;
 }
@@ -73,17 +105,12 @@ ulong SoilAlmanac::getLowestSeedLocation() {
 ulong SoilAlmanac::getLowestSeedLocationRanges() {
     ulong min = std::numeric_limits<ulong>::max();
     for (unsigned int i = 0; i < m_seeds.size(); i += 2) {
-        for (ulong seed = m_seeds[i]; seed < m_seeds[i] + m_seeds[i + 1]; seed++) {
-            // std::cout << "Test seed " << seed << std::endl;
-
-            auto val = seed;
-            for (auto const &map: m_maps) {
-                val = map.map(val);
-                // if (seed == 82) {
-                //     std::cout << val <<std::endl;
-                // }
-            }
-            if (val < min) {min = val;}
+        std::vector<std::pair<ulong, ulong>> val_ranges = {{m_seeds[i], m_seeds[i + 1]}};
+        for (auto const &map: m_maps) {
+            val_ranges = map.map(val_ranges);
+        }
+        for (auto const &r: val_ranges) {
+            if (r.first < min) {min = r.first;}
         }
     }
     return min;

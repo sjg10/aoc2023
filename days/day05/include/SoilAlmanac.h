@@ -28,7 +28,8 @@ public:
     void addRange(ulong out_start, ulong in_start, ulong length) {
         m_set.insert(MapRange(out_start, in_start, length));
     }
-    ulong map(ulong val) const;
+    // Map a list of ranges (start,count) to a list of ranges
+    std::vector<std::pair<ulong, ulong>> map(std::vector<std::pair<ulong, ulong>> input_ranges) const;
 private:
     std::set<MapRange> m_set;
 };
