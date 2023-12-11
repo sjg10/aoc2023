@@ -8,6 +8,8 @@
 std::vector<std::string> Day10::run(std::ifstream &input) {
     std::vector<std::string> out;
     PipeMap pm(input);
-    out.push_back(std::to_string(pm.getBestDistance()));
+    auto ret = pm.getBestDistance();
+    out.push_back(std::to_string(ret.first));
+    out.push_back(std::to_string(ret.second));
     return out;
 }

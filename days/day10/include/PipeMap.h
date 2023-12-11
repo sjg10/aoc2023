@@ -1,16 +1,28 @@
 #pragma once
 #include <iostream>
-#include <map>
 #include <vector>
+#include <set>
+
+using Coord=std::pair<unsigned int, unsigned int>;
+
+enum Direction {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    UNKNOWN
+};
 
 class PipeMap {
 public:
     PipeMap(std::istream &in);
-    unsigned int getBestDistance();
+    std::pair<unsigned int, unsigned int> getBestDistance();
 private:
-    unsigned int getBestDistance(std::pair<unsigned int, unsigned int> start2);
-    std::map<std::pair<unsigned int, unsigned int>, std::vector<std::pair<unsigned int, unsigned int>>> m_map;
-    std::pair<unsigned int, unsigned int> m_start;
+    std::pair<unsigned int, unsigned int> getBestDistance(Coord start2, Direction moved);
+    bool floodRegions(std::set<Coord> &region, const std::set<Coord> & path);
+    std::vector<std::vector<std::vector<Coord>>> m_map; // stores neighbours of each coord
+    std::vector<std::vector<char>> m_map_char; // stores char at a coord
+    Coord m_start;
 };
 
 
