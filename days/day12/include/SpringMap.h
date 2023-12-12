@@ -2,20 +2,19 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <map>
 
 class SpringRow {
 public:
     SpringRow(const std::string &x);
     SpringRow repeat();
-    unsigned long int getValidOptions() const;
+    unsigned long int getValidOptions(unsigned int str_offset = 0, unsigned int groups_offset = 0);
 private:
     SpringRow() = default;
-    bool isValid(std::vector<bool> springs) const;
-    std::vector<bool> m_springs;
-    std::vector<unsigned int> m_damaged_spaces;
-    std::vector<unsigned int> m_groups;
-    unsigned int m_total_springs = 0;
-    unsigned int m_fixed_spring_cnt = 0;
+    std::vector<unsigned int> m_groups; // the set of groups to split into
+    std::string m_str; // the map string
+    // a record of getValidOptions results for each str_offset, groups_offset pair
+    std::map<std::pair<unsigned int, unsigned int>, unsigned long int> m_poss_map;
 };
 
 class SpringMap {

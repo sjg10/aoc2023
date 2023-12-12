@@ -14,5 +14,5 @@ TEST(Day12Test, Part1Part2) {
     SpringMap sm(in);
     auto ret = sm.getValidOptionsSum();
     ASSERT_EQ(ret.first, 21);
-    //ASSERT_EQ(ret.second, 0);
+    ASSERT_EQ(ret.second, 525152);
 }
