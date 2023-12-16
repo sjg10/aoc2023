@@ -1,5 +1,5 @@
 #include "BeamGrid.h"
-
+#include <future>
 
 BeamGrid::BeamGrid(std::istream &in) {
     for (std::string x; std::getline(in, x);) {
@@ -95,19 +95,19 @@ unsigned int BeamGrid::walk2() {
     unsigned int x = 0;
     unsigned int rmax = m_map.size() - 1;
     unsigned int cmax = m_map[0].size() - 1;
+    std::vector<std::future<unsigned int>> m_futures;
     for(unsigned int r = 0; r <= rmax; r++) {
-        x = walk(state(r,0,EAST));
-        if(x > max) { max = x;}
-
-        x = walk(state(r,cmax,WEST));
-        if(x > max) { max = x;}
+        m_futures.push_back(std::async(std::launch::async, [this, r] { return walk(state(r,0,EAST));}));
+        m_futures.push_back(std::async(std::launch::async, [this, r, cmax] { return walk(state(r,cmax,WEST));}));
     }
-
     for(unsigned int c = 0; c <= cmax; c++) {
-        x = walk(state(0,c,SOUTH));
-        if(x > max) { max = x;}
-        x = walk(state(rmax,c,NORTH));
-        if(x > max) { max = x;}
+        m_futures.push_back(std::async(std::launch::async, [this, c] { return walk(state(0, c, SOUTH)); }));
+        m_futures.push_back(std::async(std::launch::async, [this, c, rmax] { return walk(state(rmax, c, NORTH)); }));
+    }
+    for(auto &f : m_futures){
+        f.wait();
+        x = f.get();
+        if (x > max) { max = x;}
     }
     return max;
 }
