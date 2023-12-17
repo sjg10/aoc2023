@@ -23,7 +23,7 @@
 
 /** Register of days to run */
 std::vector<std::pair<std::string, std::shared_ptr<Day>>> days = {
-    /*{"Day01", std::make_shared<Day01>("res/day01.txt")},
+    {"Day01", std::make_shared<Day01>("res/day01.txt")},
     {"Day02", std::make_shared<Day02>("res/day02.txt")},
     {"Day03", std::make_shared<Day03>("res/day03.txt")},
     {"Day04", std::make_shared<Day04>("res/day04.txt")},
@@ -38,7 +38,7 @@ std::vector<std::pair<std::string, std::shared_ptr<Day>>> days = {
     {"Day13", std::make_shared<Day13>("res/day13.txt")},
     {"Day14", std::make_shared<Day14>("res/day14.txt")},
     {"Day15", std::make_shared<Day15>("res/day15.txt")},
-    {"Day16", std::make_shared<Day16>("res/day16.txt")},*/
+    {"Day16", std::make_shared<Day16>("res/day16.txt")},
     {"Day17", std::make_shared<Day17>("res/day17.txt")},
     //Further days go here
 };

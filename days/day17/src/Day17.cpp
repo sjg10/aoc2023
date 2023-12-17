@@ -9,5 +9,6 @@ std::vector<std::string> Day17::run(std::ifstream &input) {
     std::vector<std::string> out;
     CrucibleMap cm(input);
     out.push_back(std::to_string(cm.getShortestPath()));
+    out.push_back(std::to_string(cm.getShortestPath(4,10)));
     return out;
 }

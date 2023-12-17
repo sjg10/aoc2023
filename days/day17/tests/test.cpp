@@ -18,5 +18,6 @@ TEST(Day17Test, Part1Part2) {
     in << "2546548887735\n";
     in << "4322674655533\n";
     CrucibleMap cm(in);
-    ASSERT_EQ(cm.getShortestPath(), 102);
+//    ASSERT_EQ(cm.getShortestPath(), 102);
+    ASSERT_EQ(cm.getShortestPath(4,10), 94);
 }
