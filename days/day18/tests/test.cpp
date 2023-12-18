@@ -20,5 +20,6 @@ TEST(Day18Test, Part1Part2) {
     in << "U 2 (#7a21e3)\n";
     TrenchPaint tp(in);
     ASSERT_EQ(tp.getInterior(), 62);
+    ASSERT_EQ(tp.getInterior2(), 952408144115);
 }
 

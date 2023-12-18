@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 
-using Coord = std::pair<int, int>;
+using Coord = std::pair<long int, long int>;
 
 enum Tile {
     LEFT,
@@ -16,10 +16,13 @@ enum Tile {
 class TrenchPaint {
 public:
     TrenchPaint(std::istream &in);
-    unsigned int getInterior();
+    unsigned long int getInterior();
+    unsigned long int getInterior2();
 private:
-    std::map<Coord, std::tuple<Tile, Tile, uint32_t>> m_map;
-    std::vector<std::pair<Coord, Tile>> m_path;
+    std::vector<Coord> m_corners;
+    std::vector<Coord> m_corners2;
+    long int m_boundary_size;
+    long int m_boundary_size2;
     int xmax = 0 ;
     int xmin = 0 ;
     int ymax = 0 ;
