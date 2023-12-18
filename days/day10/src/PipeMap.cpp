@@ -78,85 +78,30 @@ PipeMap::PipeMap(std::istream &in) {
 std::pair<unsigned int, unsigned int> PipeMap::getBestDistance() {
     auto next = move(m_start, DOWN);
     if (!m_map[next.first][next.second].empty()) {
-        return getBestDistance(next, DOWN);
+        return getBestDistance(next);
     }
     next = move(m_start, UP);
     if (!m_map[next.first][next.second].empty()) {
-        return getBestDistance(next, UP);
+        return getBestDistance(next);
     }
     next = move(m_start, RIGHT);
     if (!m_map[next.first][next.second].empty()) {
-        return getBestDistance(next, RIGHT);
+        return getBestDistance(next);
     }
     throw std::runtime_error("S has no neighbours!");
 }
 
-bool rotateOnCorner(Direction &inside_dir, Direction &outside_dir, char tile, Coord last, Coord cur) {
-    switch(tile) {
-        case 'L':
-            if (move(last, DOWN) == cur) {
-                rotccw(inside_dir);
-                rotccw(outside_dir);
-            }
-            else  {
-                rotcw(inside_dir);
-                rotcw(outside_dir);
-            }
-            return true;
-            break;
-        case '7':
-            if (move(last, UP) == cur) {
-                rotccw(inside_dir);
-                rotccw(outside_dir);
-            }
-            else  {
-                rotcw(inside_dir);
-                rotcw(outside_dir);
-            }
-            return true;
-            break;
-        case 'F':
-            if (move(last, LEFT) == cur)  {
-                rotccw(inside_dir);
-                rotccw(outside_dir);
-            }
-            else  {
-                rotcw(inside_dir);
-                rotcw(outside_dir);
-            }
-            return true;
-            break;
-        case 'J':
-            if (move(last, RIGHT) == cur)  {
-                rotccw(inside_dir);
-                rotccw(outside_dir);
-            }
-            else  {
-                rotcw(inside_dir);
-                rotcw(outside_dir);
-            }
-            return true;
-            break;
-        default:
-            return false;
-            break;
-    }
-    return false;
+bool isCorner(char tile) {
+    return (tile == 'L' || tile == '7' || tile == 'J' || tile == 'F');
 }
 
-std::pair<unsigned int, unsigned int> PipeMap::getBestDistance(Coord start2, Direction moved) {
+std::pair<unsigned int, unsigned int> PipeMap::getBestDistance(Coord start2) {
     Coord cur = start2;
     Coord last = m_start;
-    Direction inside_dir = moved; rotcw(inside_dir);
-    Direction outside_dir = moved; rotccw(outside_dir);
-    std::set<Coord> inside_region = {move(start2, inside_dir)};
-    std::set<Coord> outside_region = {move(start2, outside_dir)};
-    std::set<Coord> path = {m_start, start2};
+    std::vector<Coord> corners;
     unsigned int distance = 1;
-    // initial rotate if start2 on corner
-    if(rotateOnCorner(inside_dir, outside_dir, m_map_char[cur.first][cur.second], last, cur)) {
-        inside_region.insert(move(cur, inside_dir));
-        outside_region.insert(move(cur, outside_dir));
+    if(isCorner(m_map_char[cur.first][cur.second])) {
+        corners.push_back(cur);
     };
     while (cur != m_start) {
         // Move
@@ -169,56 +114,20 @@ std::pair<unsigned int, unsigned int> PipeMap::getBestDistance(Coord start2, Dir
                 break;
             }
         }
-        // add neighbours to regions before turn after move
-        inside_region.insert(move(cur, inside_dir));
-        outside_region.insert(move(cur, outside_dir));
-        //check if we turn and update "side" directions
-        if(rotateOnCorner(inside_dir, outside_dir, m_map_char[cur.first][cur.second], last, cur)) {
-            //after a possible rotating, add border regions again
-            inside_region.insert(move(cur, inside_dir));
-            outside_region.insert(move(cur, outside_dir));
+        if(isCorner(m_map_char[cur.first][cur.second])) {
+            corners.push_back(cur);
         };
-        path.insert(cur);
     }
+    corners.push_back(m_start); // the start may or may not be a corner, it works either way
 
-    // flood regions
-    bool inside = floodRegions(inside_region, path);
-    bool inside2 = floodRegions(outside_region, path);
-    if (inside == inside2) { throw std::runtime_error("Two outsides?");}
-    if (!inside) {inside_region.swap(outside_region);}
-    return {distance / 2,  inside_region.size()};
-}
-
-/** Flood out a collection of regions, bounded by the path and the edge of the map.
- * Return true iff no part of the region touches the map edge */
-bool PipeMap::floodRegions(std::set<Coord> &region, const std::set<Coord> & path) {
-    bool inside = true;
-    // Remove the path
-    std::set<Coord> c;
-    std::set_difference(region.begin(), region.end(), path.begin(), path.end(), std::inserter(c, c.begin()));
-    region.swap(c);
-
-    // Start adding neighbours
-    std::set<Coord> additional = region;
-    while(!additional.empty()) {
-        region.insert(additional.begin(), additional.end());
-        std::set<Coord> recent;
-        recent.swap(additional);
-        for(auto const &l : recent) { // for each recently added member
-            // if in border don't find neighbours to prevent overrun
-            if (m_map_char[l.first][l.second] == 'O') {
-                inside = false;
-                continue;
-            }
-            std::vector<Direction> dirs = {UP, DOWN, LEFT, RIGHT};
-            // get new neighbours not in path
-            for (auto const &dir: dirs) {
-                auto l2 = move(l, dir);
-                if (!path.contains(l2) & !region.contains(l2)) {
-                    additional.insert(l2);
-                }
-            }
-        }
+    // Use the shoelace formula to get the double area.
+    long int darea = 0;
+    for (unsigned int i = 0; i < (corners.size() - 1); i++) {
+        darea += (long int)((corners[i].first * corners[i + 1].second) - (long int)(corners[i + 1].first * corners[i].second));
     }
-    return inside;
+    darea += (long int)((corners[(corners.size() - 1)].first * corners[0].second) - (long int)(corners[0].first * corners[(corners.size() - 1)].second));
+    // Then picks theorem to get the integer points contained
+    unsigned long int r2 =  ((std::abs(darea) / 2) - (distance / 2)) + 1;
+
+    return {distance / 2,  r2};
 }
