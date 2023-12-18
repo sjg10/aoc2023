@@ -17,13 +17,14 @@
 #include "Day15.h"
 #include "Day16.h"
 #include "Day17.h"
+#include "Day18.h"
 //Further day includes go here
 #include <iostream>
 
 
 /** Register of days to run */
 std::vector<std::pair<std::string, std::shared_ptr<Day>>> days = {
-    {"Day01", std::make_shared<Day01>("res/day01.txt")},
+    /*{"Day01", std::make_shared<Day01>("res/day01.txt")},
     {"Day02", std::make_shared<Day02>("res/day02.txt")},
     {"Day03", std::make_shared<Day03>("res/day03.txt")},
     {"Day04", std::make_shared<Day04>("res/day04.txt")},
@@ -39,7 +40,8 @@ std::vector<std::pair<std::string, std::shared_ptr<Day>>> days = {
     {"Day14", std::make_shared<Day14>("res/day14.txt")},
     {"Day15", std::make_shared<Day15>("res/day15.txt")},
     {"Day16", std::make_shared<Day16>("res/day16.txt")},
-    {"Day17", std::make_shared<Day17>("res/day17.txt")},
+    {"Day17", std::make_shared<Day17>("res/day17.txt")},*/
+    {"Day18", std::make_shared<Day18>("res/day18.txt")},
     //Further days go here
 };
 
