@@ -2,73 +2,47 @@
 #include <regex>
 #include <iostream>
 
-std::ostream & operator<<(std::ostream &os, const PartRange &p) {
-    for (auto const &r : p.m_ranges ) {
-        for (unsigned int i = 0; i < 4; i ++ ) {
-            os << "(" << r.first[i] << "," << r.second[i] << ") ";
-        }
-        os << std::endl;
-    }
-    return os;
-}
-
-PartRange::PartRange(const Part &start, const Part &end) {
-    m_ranges.push_back({start, end});
-}
-
-void PartRange::rangeUnion(const PartRange &p) {
-    m_ranges.insert(m_ranges.begin(), p.m_ranges.begin(), p.m_ranges.end());
-}
-
-
 std::pair<PartRange,PartRange> PartRange::split(unsigned int chr, unsigned int limit, bool lt) const {
     std::pair<PartRange,PartRange>  res = {PartRange() , PartRange()}; // good, bad
-    for (auto const &r : m_ranges ) {
-        if (lt) {
-            if (r.second[chr] < limit) {
-                res.first.rangeUnion(PartRange(r));
-            } else if (r.first[chr] >= limit) {
-                res.second.rangeUnion(PartRange(r));
-            }
-            else {
-                Part mid = r.second;
-                mid[chr] = limit - 1;
-                res.first.rangeUnion(PartRange(r.first, mid));
-                mid = r.first;
-                mid[chr] = limit;
-                res.second.rangeUnion(PartRange(mid, r.second));
-            }
+    if (lt) {
+        if (m_range_end[chr] < limit) {
+            res.first = *this;
+        } else if (m_range_start[chr] >= limit) {
+            res.second = *this;
         }
         else {
-            if (r.first[chr] > limit) {
-                res.first.rangeUnion(PartRange(r));
-            } else if (r.second[chr] <= limit) {
-                res.second.rangeUnion(PartRange(r));
-            }
-            else {
-                Part mid = r.second;
-                mid[chr] = limit;
-                res.second.rangeUnion(PartRange(r.first, mid));
-                mid = r.first;
-                mid[chr] = limit + 1;
-                res.first.rangeUnion(PartRange(mid, r.second));
-            }
+            Part mid = m_range_end;
+            mid[chr] = limit - 1;
+            res.first = PartRange(m_range_start, mid);
+            mid = m_range_start;
+            mid[chr] = limit;
+            res.second = PartRange(mid, m_range_end);
+        }
+    }
+    else {
+        if (m_range_start[chr] > limit) {
+            res.first = *this;
+        } else if (m_range_end[chr] <= limit) {
+            res.second = *this;
+        }
+        else {
+            Part mid = m_range_end;
+            mid[chr] = limit;
+            res.second = PartRange(m_range_start, mid);
+            mid = m_range_start;
+            mid[chr] = limit + 1;
+            res.first = PartRange(mid, m_range_end);
         }
     }
     return res;
 }
 
-unsigned long int PartRange::size() {
-    unsigned long int size = 0;
-    for (auto const &r: m_ranges) {
-        size += (
-            (unsigned long int)((r.second[0] - r.first[0]) + 1) *
-            (unsigned long int)((r.second[1] - r.first[1]) + 1) *
-            (unsigned long int)((r.second[2] - r.first[2]) + 1) *
-            (unsigned long int)((r.second[3] - r.first[3]) + 1)
-        );
-    }
-    return size;
+unsigned long int PartRange::size() const{
+    return
+            (unsigned long int)((m_range_end[0] - m_range_start[0]) + 1) *
+            (unsigned long int)((m_range_end[1] - m_range_start[1]) + 1) *
+            (unsigned long int)((m_range_end[2] - m_range_start[2]) + 1) *
+            (unsigned long int)((m_range_end[3] - m_range_start[3]) + 1);
 }
 
 Rule::Rule(const std::string &in) {
@@ -105,22 +79,18 @@ std::string Rule::apply(const Part &p) const {
     }
 }
 
-std::map<std::string, PartRange> Rule::apply(const PartRange &p) const {
-    std::map<std::string, PartRange> ret;
+std::tuple<std::string, PartRange, PartRange> Rule::apply(const PartRange &p) const {
     if (m_default) {
-        ret[m_dest] = p;
-        return ret;
+        return {m_dest, p, PartRange()};
     }
     else  {
         auto p2 = p.split(m_char,m_int, m_lt);
-        ret[m_dest] = p2.first;
-        ret[""] = p2.second;
-        return ret;
+        return {m_dest, p2.first, p2.second};
     }
 }
 
 
-RuleSet::RuleSet(const std::string name, const std::string &in) : m_name(name) {
+RuleSet::RuleSet(const std::string &name, const std::string &in) : m_name(name) {
     size_t offset = 1;
     size_t noffset = 1;
     noffset = in.find(",", offset);
@@ -141,25 +111,23 @@ std::string RuleSet::apply(const Part &p) const {
 }
 
 
-std::map<std::string, PartRange>  RuleSet::apply(const PartRange &p) const {
+std::map<std::string, PartRange> RuleSet::apply(const PartRange &p, unsigned long int &acnt) const {
     PartRange s = p;
     std::map<std::string, PartRange> pm;
     for(auto const &r : m_rules) {
-        auto x = r.apply(s);
-        for(auto const &y : x) {
-            if (y.first.empty()) {
-                s = y.second;
+        const auto[name, p1, p2] = r.apply(s);
+        if(!p1.empty()) {
+            if (name == "A") {
+                acnt += p1.size();
             }
-            else {
-                if (!y.second.empty()) {
-                    if (pm.contains(y.first)) {
-                        pm[y.first].rangeUnion(y.second);
-                    } else {
-                        pm[y.first] = y.second;
-                    }
+            else if (name != "R") {
+                if (pm.contains(name)) {
+                    throw std::runtime_error("runtime error");
                 }
+                pm[name] = p1;
             }
         }
+        s = p2;
     }
     return pm;
 }
@@ -204,20 +172,15 @@ unsigned int MachineSort::sort() {
     return ret;
 }
 
-PartRange MachineSort::sortpriv(const std::map<std::string, PartRange> &m) {
-    auto p = PartRange();
+unsigned long int MachineSort::sortpriv(const std::map<std::string, PartRange> &m) {
+    unsigned long int ret = 0;
     for (auto &[key,val] : m) {
-        if (key == "A") {
-            p.rangeUnion(val);
-        }
-        else if (key != "R") {
-            auto m2 = m_rules[key].apply(val);
-            p.rangeUnion(sortpriv(m2));
-        }
+        auto m2 = m_rules[key].apply(val, ret);
+        ret += sortpriv(m2);
     }
-    return p;
+    return ret;
 }
 
 unsigned long int MachineSort::sort2() {
-    return sortpriv({{"in", PartRange({1,1,1,1}, {4000,4000,4000,4000})}}).size();
+    return sortpriv({{"in", PartRange({1,1,1,1}, {4000,4000,4000,4000})}});
 }
