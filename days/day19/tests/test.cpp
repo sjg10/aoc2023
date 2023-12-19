@@ -22,5 +22,6 @@ TEST(Day19Test, Part1Part2) {
     in << "{x=2127,m=1623,a=2188,s=1013}\n";
     MachineSort ms(in);
     ASSERT_EQ(ms.sort(), 19114);
+    ASSERT_EQ(ms.sort2(), 167409079868000);
 }
 

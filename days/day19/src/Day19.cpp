@@ -9,5 +9,6 @@ std::vector<std::string> Day19::run(std::ifstream &input) {
     std::vector<std::string> out;
     MachineSort ms(input);
     out.push_back(std::to_string(ms.sort()));
+    out.push_back(std::to_string(ms.sort2()));
     return out;
 }
