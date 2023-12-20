@@ -1,23 +1,19 @@
 #include "PulseGen.h"
 #include <ranges>
 #include <iostream>
-
+#include <numeric>
 void FlipFlop::apply(const Pulse &pulse, const std::string &from, std::queue<Signal> &queue) {
     (void) from; // ignore unused
-//    std::cout << m_name << " F " << pulse << std::endl;
     if (pulse == LOW) {
         m_state["state"] = !m_state["state"];
         Pulse sendvalue = m_state["state"] ? HIGH : LOW;
         for (auto &x: m_output) {
             queue.push({x, m_name, sendvalue});
-//            std::cout << x << " " << sendvalue << std::endl;
         }
     }
-//    std::cout << std::endl;
 };
 
 void Conjunction::apply(const Pulse &pulse, const std::string &from, std::queue<Signal> &queue) {
-//    std::cout << m_name << " C " << pulse << std::endl;
     m_state[from] = (pulse == HIGH);
     bool all_high = true;
     for (auto &x: m_state) {
@@ -29,9 +25,7 @@ void Conjunction::apply(const Pulse &pulse, const std::string &from, std::queue<
     Pulse sendvalue = all_high ? LOW : HIGH;
     for (auto &x: m_output) {
         queue.push({x, m_name, sendvalue});
-//        std::cout << x << " " << sendvalue << std::endl;
     }
-//    std::cout << std::endl;
 }
 
 
@@ -49,17 +43,14 @@ PulseGen::PulseGen(std::istream &in) {
         else if (type == '&') { m_members[name] = std::make_unique<Conjunction>(name); }
         offset = x.find(">") + 2;
         auto noffset = x.find(",", offset);
-        std::cout << name << std::endl;
         while (noffset != std::string::npos) {
             std::string out = x.substr(offset, noffset - offset);
-            std::cout << out << std::endl;
             if (broadcaster) { m_broadcast.push_back(out); }
             else { m_members[name]->addOutput(out); }
             offset = noffset + 2;
             noffset = x.find(",", offset);
         }
         std::string out = x.substr(offset);
-        std::cout << out << std::endl << std::endl;
         if (broadcaster) { m_broadcast.push_back(out); }
         else { m_members[name]->addOutput(out); }
     }
@@ -85,6 +76,8 @@ std::pair<unsigned long int,unsigned long int> PulseGen::run(bool skip_rx) {
     unsigned long int high_cnt = 0;
     unsigned long int rx_loc = 0;
     bool rx_found = skip_rx;
+    unsigned long int vn, hn,kt,ph;
+    bool vn_found(false), hn_found(false),kt_found(false),ph_found(false);
     bool run_done = false;
     unsigned long int i = 0;
     while (!run_done || !rx_found) {
@@ -100,9 +93,26 @@ std::pair<unsigned long int,unsigned long int> PulseGen::run(bool skip_rx) {
                 if (std::get<2>(cmd) == HIGH) { high_cnt++; }
                 else { low_cnt++; }
             }
-            if(!rx_found && std::get<0>(cmd) == "rx" && std::get<2>(cmd) == LOW) {
-                rx_loc = (i + 1);
+            //finding rx (i hate this)
+            if(!vn_found && std::get<1>(cmd) == "vn" && std::get<2>(cmd) == HIGH) {
+                vn = i+1;
+                vn_found = true;
+            }
+            if(!hn_found && std::get<1>(cmd) == "hn" && std::get<2>(cmd) == HIGH) {
+                hn = i+1;
+                hn_found = true;
+            }
+            if(!kt_found && std::get<1>(cmd) == "kt" && std::get<2>(cmd) == HIGH) {
+                kt = i+1;
+                kt_found=true;
+            }
+            if(!ph_found && std::get<1>(cmd) == "ph" && std::get<2>(cmd) == HIGH) {
+                ph = i+1;
+                ph_found=true;
+            }
+            if(vn_found && hn_found && kt_found && ph_found ) {
                 rx_found = true;
+                rx_loc = std::lcm(vn, std::lcm(ph, std::lcm( hn, kt)));
             }
             if (m_members.contains(std::get<0>(cmd))) {
                 m_members[std::get<0>(cmd)]->apply(std::get<2>(cmd), std::get<1>(cmd), s);
