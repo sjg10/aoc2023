@@ -20,13 +20,14 @@
 #include "Day18.h"
 #include "Day19.h"
 #include "Day20.h"
+#include "Day21.h"
 //Further day includes go here
 #include <iostream>
-
+#include <string.h>
 
 /** Register of days to run */
 std::vector<std::pair<std::string, std::shared_ptr<Day>>> days = {
-    /*{"Day01", std::make_shared<Day01>("res/day01.txt")},
+    {"Day01", std::make_shared<Day01>("res/day01.txt")},
     {"Day02", std::make_shared<Day02>("res/day02.txt")},
     {"Day03", std::make_shared<Day03>("res/day03.txt")},
     {"Day04", std::make_shared<Day04>("res/day04.txt")},
@@ -43,17 +44,24 @@ std::vector<std::pair<std::string, std::shared_ptr<Day>>> days = {
     {"Day15", std::make_shared<Day15>("res/day15.txt")},
     {"Day16", std::make_shared<Day16>("res/day16.txt")},
     {"Day17", std::make_shared<Day17>("res/day17.txt")},
-    {"Day18", std::make_shared<Day18>("res/day18.txt")},*/
+    {"Day18", std::make_shared<Day18>("res/day18.txt")},
     {"Day19", std::make_shared<Day19>("res/day19.txt")},
     {"Day20", std::make_shared<Day20>("res/day20.txt")},
+    {"Day21", std::make_shared<Day21>("res/day21.txt")},
     //Further days go here
 };
 
-int main(void) {
+int main(int argc, char *argv[]) {
     std::cout << "AOC2023 Start" << std::endl;
-    for (auto const &day : days) {
-        std::cout << day.first << " Start" << std::endl;
-        day.second->runday();
+    if(argc == 2 && strcmp(argv[1], "--last") == 0) {
+        std::cout << days.rbegin()->first << " Start" << std::endl;
+        days.rbegin()->second->runday();
+    }
+    else {
+        for (auto const &day : days) {
+            std::cout << day.first << " Start" << std::endl;
+            day.second->runday();
+        }
     }
     std::cout << "AOC2023 Complete" << std::endl;
 

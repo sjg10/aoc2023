@@ -19,6 +19,10 @@ To run, add the resource files to `res/` and then run
 
     ./aoc2023
 
+To optionally run the most recent day only, run
+
+    ./aoc2023 --last
+
 ## Tools
 
 Inside `tools/createday` run `createday.sh daynumber` e.g. `createday.sh 02` . This will create a folder day02 with all example files, and update the build chain for the new day.
