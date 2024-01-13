@@ -1,6 +1,8 @@
 #include "WiringMachine.h"
 #include <queue>
 #include <bitset>
+#include <limits>
+#include <set>
 
 WiringMachine::WiringMachine(std::istream &in) {
     for (std::string x; std::getline(in, x);) {
@@ -24,27 +26,35 @@ WiringMachine::WiringMachine(std::istream &in) {
     }
 }
 
-unsigned int WiringMachine::getScore() {
-    // try visualised hint (using vis.py) first, will not cut any edges if not found
-    unsigned int ret = 0;
-    EdgeId ah = std::find(m_edges.begin(), m_edges.end(), "rrl/pcs") - m_edges.begin();
-    EdgeId bh = std::find(m_edges.begin(), m_edges.end(), "qnd/mbk") - m_edges.begin();
-    EdgeId ch = std::find(m_edges.begin(), m_edges.end(), "ddl/lcm") - m_edges.begin();
-    ret = getComponents(ah, bh, ch);
-    if (ret != 0) return ret;
-    for(EdgeId a = 0; a < m_edges.size() -2; a++) {
-        for (EdgeId b = a + 1; b < m_edges.size() - 1; b++) {
-            for (EdgeId c = b + 1; c < m_edges.size(); c++) {
-                ret = getComponents(a,b,c);
-                if (ret != 0) return ret;
-            }
-        }
+unsigned int WiringMachine::getBusiestEdge(EdgeId excla, EdgeId exclb) {
+    std::vector<unsigned int> edge_occurence(m_edges.size());
+    for (unsigned int i  =0; i < m_nodes.size(); i++) {
+        getShortestPath(i, edge_occurence, excla, exclb);
     }
-    return 0;
+    std::vector<std::pair<unsigned int, unsigned int>> edge_occurence2(m_edges.size());
+    for(unsigned int i = 0; i < m_edges.size(); i++) {
+        edge_occurence2[i] = {i,edge_occurence[i]};
+    }
+    std::sort(edge_occurence2.begin(), edge_occurence2.end(),  [](const std::pair<unsigned int, unsigned int> &a, const std::pair<unsigned int, unsigned int> &b)
+    {
+        return a.second < b.second;
+    });
+    return edge_occurence2.rbegin()->first;
+}
+
+unsigned int WiringMachine::getScore() {
+    EdgeId a = getBusiestEdge(std::numeric_limits<EdgeId>::max(),std::numeric_limits<EdgeId>::max());
+    std::cout <<m_edges[a] <<std::endl;
+    EdgeId b = getBusiestEdge(a, std::numeric_limits<EdgeId>::max());
+    std::cout <<m_edges[b] <<std::endl;
+    EdgeId c = getBusiestEdge(a,b);
+    std::cout <<m_edges[c] <<std::endl;
+
+    return getComponents(a,b,c);
 }
 
 unsigned int WiringMachine::getComponents(EdgeId a, EdgeId b, EdgeId c) {
-    std::bitset<2048> visited; // at least as big as any input. quicker than vector bool
+    std::vector<bool> visited(m_nodes.size()); // at least as big as any input. quicker than vector bool
     std::vector<unsigned int> components;
     for ( unsigned int v = 0; v < m_nodes.size(); v++) {
         if(visited[v]) continue;
@@ -68,4 +78,40 @@ unsigned int WiringMachine::getComponents(EdgeId a, EdgeId b, EdgeId c) {
         }
     }
     return components.size() == 2 ? components[0] * components[1] : 0;
+}
+
+void WiringMachine::getShortestPath(NodeId start, std::vector<unsigned int> &edge_occurence, EdgeId excla, EdgeId exclb) {
+    std::bitset<2048> visited; // at least as big as any input. quicker than vector bool
+    std::vector<unsigned int> dist(m_nodes.size(), std::numeric_limits<unsigned int>::max());
+    std::vector<std::pair<int, int>> prev(m_nodes.size(), {-1, -1});
+    auto cmp = [&dist](unsigned int v1, unsigned int v2) { return dist[v1] < dist[v2]; };
+    std::multiset<unsigned int, decltype(cmp)> q(cmp);
+    auto u = start;
+    dist[u] = 0;
+    visited[u] = true;
+    q.insert(u);
+    while (!q.empty()) {
+        u = *q.begin();
+        q.erase(q.begin());
+
+        unsigned int alt;
+        for (auto const &v: m_nodes[u]) {
+            if (v.first == excla || v.first == exclb ) { continue;}
+            if(!visited[v.second]) {
+                visited[v.second] = true;
+                alt = dist[u] + 1;
+                if (alt < dist[v.second]) {
+                    dist[v.second] = alt;
+                    prev[v.second] = {v.first, u};
+                }
+                q.insert(v.second);
+            }
+        }
+    }
+    for (auto const &x : prev) {
+        if (x.first != -1) {
+            edge_occurence[x.first]++;
+        }
+    }
+
 }

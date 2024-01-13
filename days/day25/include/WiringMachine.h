@@ -30,6 +30,8 @@ public:
     unsigned int getScore();
 private:
     unsigned int getComponents(EdgeId a, EdgeId b, EdgeId c);
+    void getShortestPath(NodeId start, std::vector<unsigned int> &edge_occurence, EdgeId excla, EdgeId exclb);
+    unsigned int getBusiestEdge(EdgeId excla, EdgeId exclb);
     std::map<std::string, unsigned int> m_node_map;
     std::vector<std::string> m_edges;
     std::vector<WiringNode> m_nodes;
