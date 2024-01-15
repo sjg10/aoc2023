@@ -12,4 +12,5 @@ TEST(Day24Test, Part1Part2) {
     in << "20, 19, 15 @  1, -5, -3\n";
     HailStorm hs(in);
     ASSERT_EQ(hs.getCollisions(7, 27), 2);
+    ASSERT_EQ(hs.getRock(), 47);
 }

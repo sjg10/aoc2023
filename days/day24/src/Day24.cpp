@@ -9,5 +9,6 @@ std::vector<std::string> Day24::run(std::ifstream &input) {
     std::vector<std::string> out;
     HailStorm hs(input);
     out.push_back(std::to_string(hs.getCollisions(200000000000000, 400000000000000)));
+    out.push_back(std::to_string(hs.getRock()));
     return out;
 }
